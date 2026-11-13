@@ -35,8 +35,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           cz --no-raise 21 bump --yes  # 21 = no bumpable commits (docs/chore only)
           if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
-            git push --follow-tags
-            echo "version=$(cz version --project)" >> "$GITHUB_OUTPUT"
+            version=$(cz version --project)
+            git push origin HEAD "v$version"  # cz tags are lightweight; --follow-tags would skip them
+            echo "version=$version" >> "$GITHUB_OUTPUT"
           fi
       - name: Build binaries
         if: steps.bump.outputs.version
