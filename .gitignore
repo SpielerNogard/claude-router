@@ -1,0 +1,9 @@
+/dist/
+/claude-router
+config*.toml
+/router
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep
+/site/
+/.cache/

@@ -1,0 +1,108 @@
+{
+  "app": {
+    "live": "Live",
+    "usage": "Usage",
+    "activity": "Activity"
+  },
+  "status": {
+    "allFree": "all providers available",
+    "blockedUntil": "{provider} blocked until {time}",
+    "connected": "connected",
+    "disconnected": "no connection",
+    "language": "Language"
+  },
+  "auth": {
+    "title": "API token required",
+    "hint": "The router has ROUTER_API_TOKEN set. Enter it to load data.",
+    "save": "Save"
+  },
+  "live": {
+    "requests": "Requests",
+    "tokensIn": "Tokens in",
+    "tokensOut": "Tokens out",
+    "hitRate": "Cache hit rate",
+    "cost": "Cost",
+    "pause": "Pause",
+    "resume": "Resume",
+    "newCount": "{n} new",
+    "errorsOnly": "errors only",
+    "clearFilter": "clear filter",
+    "range": {
+      "1h": "1 h",
+      "3h": "3 h",
+      "6h": "6 h",
+      "24h": "24 h",
+      "7d": "7 days"
+    },
+    "newer": "newer",
+    "older": "older",
+    "page": "page {page} of {pages}",
+    "cacheRead": "+ {n} cache read",
+    "cacheWrite": "+ {n} cache written"
+  },
+  "col": {
+    "time": "Time",
+    "client": "Client",
+    "provider": "Provider",
+    "model": "Model",
+    "in": "In",
+    "out": "Out",
+    "cacheRW": "Cache R/W",
+    "hit": "Hit %",
+    "cost": "Cost",
+    "duration": "Duration",
+    "status": "Status",
+    "requests": "Requests",
+    "series": "Series"
+  },
+  "usage": {
+    "range": "Range",
+    "days": "{n} days",
+    "bucket": "Bucket",
+    "hour": "Hour",
+    "day": "Day",
+    "week": "Week",
+    "groupBy": "Group by",
+    "model": "Model",
+    "provider": "Provider",
+    "client": "Client",
+    "tokens": "Tokens (incl. cache)",
+    "hitRate": "Cache hit rate",
+    "totals": "Totals",
+    "listPrice": "subscription, list price",
+    "empty": "No requests in this range"
+  },
+  "limits": {
+    "unlimited": "no window limit",
+    "noData": "no data yet",
+    "resets": "resets {time}",
+    "stale": "reset passed, no new value yet"
+  },
+  "theme": {
+    "label": "Theme",
+    "auto": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "docs": {
+    "in": "Request",
+    "translated": "Translated",
+    "upstream": "Upstream",
+    "out": "Response",
+    "headers": "Headers",
+    "copy": "Copy",
+    "copied": "Copied",
+    "loading": "Loading …",
+    "nothing": "Nothing logged (log level meta/off or older than keep_days)",
+    "truncated": "truncated",
+    "copyFailed": "Copy not possible",
+    "toggle": "Show or hide details"
+  },
+  "activity": {
+    "requests": "Requests",
+    "tokens": "Tokens",
+    "cost": "Cost",
+    "year": "Last 12 months",
+    "weekHour": "Weekday × hour (last 8 weeks)"
+  }
+}

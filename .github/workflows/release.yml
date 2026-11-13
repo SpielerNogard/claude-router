@@ -1,0 +1,53 @@
+name: Release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+      - run: pip install commitizen
+      - run: make test
+      - run: cd web && npm ci && npm test
+      - name: Bump version
+        id: bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cz --no-raise 21 bump --yes  # 21 = no bumpable commits (docs/chore only)
+          if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
+            git push --follow-tags
+            echo "version=$(cz version --project)" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build binaries
+        if: steps.bump.outputs.version
+        run: |
+          make release VERSION=${{ steps.bump.outputs.version }}
+          cd dist && sha256sum * > checksums.txt
+      - name: Publish release
+        if: steps.bump.outputs.version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          cz changelog "$VERSION" --dry-run > notes.md
+          gh release create "v$VERSION" dist/* --title "v$VERSION" --notes-file notes.md

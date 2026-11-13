@@ -1,0 +1,108 @@
+{
+  "app": {
+    "live": "Live",
+    "usage": "Verbrauch",
+    "activity": "Aktivität"
+  },
+  "status": {
+    "allFree": "alle Provider frei",
+    "blockedUntil": "{provider} gesperrt bis {time}",
+    "connected": "verbunden",
+    "disconnected": "keine Verbindung",
+    "language": "Sprache"
+  },
+  "auth": {
+    "title": "API-Token erforderlich",
+    "hint": "Im Router ist ROUTER_API_TOKEN gesetzt. Gib es ein, um Daten zu laden.",
+    "save": "Speichern"
+  },
+  "live": {
+    "requests": "Anfragen",
+    "tokensIn": "Tokens rein",
+    "tokensOut": "Tokens raus",
+    "hitRate": "Cache-Trefferquote",
+    "cost": "Kosten",
+    "pause": "Pause",
+    "resume": "Weiter",
+    "newCount": "{n} neu",
+    "errorsOnly": "nur Fehler",
+    "clearFilter": "Filter löschen",
+    "range": {
+      "1h": "1 Std.",
+      "3h": "3 Std.",
+      "6h": "6 Std.",
+      "24h": "24 Std.",
+      "7d": "7 Tage"
+    },
+    "newer": "neuer",
+    "older": "älter",
+    "page": "Seite {page} von {pages}",
+    "cacheRead": "+ {n} Cache gelesen",
+    "cacheWrite": "+ {n} Cache geschrieben"
+  },
+  "col": {
+    "time": "Zeit",
+    "client": "Client",
+    "provider": "Provider",
+    "model": "Modell",
+    "in": "Rein",
+    "out": "Raus",
+    "cacheRW": "Cache L/S",
+    "hit": "Treffer %",
+    "cost": "Kosten",
+    "duration": "Dauer",
+    "status": "Status",
+    "requests": "Anfragen",
+    "series": "Serie"
+  },
+  "usage": {
+    "range": "Zeitraum",
+    "days": "{n} Tage",
+    "bucket": "Abschnitt",
+    "hour": "Stunde",
+    "day": "Tag",
+    "week": "Woche",
+    "groupBy": "Gruppieren nach",
+    "model": "Modell",
+    "provider": "Provider",
+    "client": "Client",
+    "tokens": "Tokens (inkl. Cache)",
+    "hitRate": "Cache-Trefferquote",
+    "totals": "Summen",
+    "listPrice": "Abo, Listenpreis",
+    "empty": "Keine Anfragen in diesem Zeitraum"
+  },
+  "limits": {
+    "unlimited": "kein Fenster-Limit",
+    "noData": "noch keine Werte",
+    "resets": "Reset {time}",
+    "stale": "Reset vorbei, noch kein neuer Wert"
+  },
+  "theme": {
+    "label": "Darstellung",
+    "auto": "System",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "docs": {
+    "in": "Request",
+    "translated": "Übersetzt",
+    "upstream": "Upstream",
+    "out": "Response",
+    "headers": "Header",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "loading": "Lade …",
+    "nothing": "Nichts geloggt (log level meta/off oder älter als keep_days)",
+    "truncated": "gekürzt",
+    "copyFailed": "Kopieren nicht möglich",
+    "toggle": "Details auf- oder zuklappen"
+  },
+  "activity": {
+    "requests": "Anfragen",
+    "tokens": "Tokens",
+    "cost": "Kosten",
+    "year": "Letzte 12 Monate",
+    "weekHour": "Wochentag × Uhrzeit (letzte 8 Wochen)"
+  }
+}
