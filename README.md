@@ -8,7 +8,7 @@ Route by model name, translate Anthropic ↔ OpenAI, fall back automatically whe
 subscription runs dry, and see every token and every cent in a built-in dashboard.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Go](https://img.shields.io/badge/go-1.25-00ADD8?logo=go&logoColor=white)
+![Go](https://img.shields.io/badge/go-1.26-00ADD8?logo=go&logoColor=white)
 ![Vue](https://img.shields.io/badge/ui-Vue%203-42b883?logo=vuedotjs&logoColor=white)
 [![Docs](https://img.shields.io/badge/docs-spielernogard.github.io-6c47ff)](https://spielernogard.github.io/claude-router/)
 
@@ -99,7 +99,7 @@ first.
 
 ## Development
 
-Building from source needs Go 1.25+ and Node/npm (`make build UI=0` skips the UI).
+Building from source needs Go 1.26+ and Node/npm (`make build UI=0` skips the UI).
 
 ```bash
 make build       # UI + binary → ./claude-router
