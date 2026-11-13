@@ -170,3 +170,16 @@ The watchdog applies **only to streams**. A non-streaming answer arrives in one 
 any idle limit would be a false alarm there. Claude Code aborts silent streams on its own
 after 3 minutes (5 behind a gateway). The 120 s default is set below that, so the error
 comes from the router and the client can retry right away.
+
+## Update check: `[update]`
+
+On every start, release builds ask GitHub whether a newer version exists (2 s timeout,
+failures are ignored). In the terminal UI the router offers to update right away;
+otherwise it logs a hint to run `claude-router update`. To turn the check off:
+
+```toml
+[update]
+check = false
+```
+
+`claude-router update` works regardless of this setting.

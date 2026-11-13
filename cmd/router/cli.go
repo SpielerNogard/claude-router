@@ -38,7 +38,7 @@ func newRootCmd() *cobra.Command {
 	root.Flags().BoolVar(&flagDebug, "debug", false, "log every request including translation steps")
 	root.Flags().BoolVar(&flagNoTUI, "no-tui", false, "show plain log output instead of the terminal UI")
 
-	root.AddCommand(newStopCmd(), newCheckCmd())
+	root.AddCommand(newStopCmd(), newCheckCmd(), newUpdateCmd())
 	return root
 }
 

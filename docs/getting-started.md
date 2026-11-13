@@ -44,7 +44,7 @@ against `checksums.txt` from the release (`shasum -a 256 -c --ignore-missing che
 
 ## Build from source
 
-You need Go 1.25+, and Node/npm for the web UI.
+You need Go 1.26+, and Node/npm for the web UI.
 
 ```bash
 git clone https://github.com/SpielerNogard/claude-router.git
