@@ -1,3 +1,9 @@
+## v0.3.0 (2026-11-13)
+
+### Feat
+
+- self-update via claude-router update and startup prompt (#2)
+
 ## v0.2.0 (2026-11-13)
 
 ### Feat
