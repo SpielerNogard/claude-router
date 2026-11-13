@@ -146,6 +146,8 @@ func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 	if err != nil {
 		log.Fatalf("startup aborted: %v", err)
 	}
+	interactive := useTUI(noTUI, *debug, isatty.IsTerminal(os.Stdin.Fd()) && foreground(os.Stdin.Fd()), isatty.IsTerminal(os.Stdout.Fd()))
+	startupUpdateCheck(cfg, interactive)
 
 	token := strings.TrimSpace(os.Getenv("ROUTER_API_TOKEN"))
 	if err := apiGate(token, cfg.Listen, hasKeyProvider(cfg)); err != nil {
@@ -220,7 +222,7 @@ func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 		}
 	}()
 
-	if useTUI(noTUI, *debug, isatty.IsTerminal(os.Stdin.Fd()) && foreground(os.Stdin.Fd()), isatty.IsTerminal(os.Stdout.Fd())) {
+	if interactive {
 		runForeground(ctx, func(ctx context.Context) error {
 			buf := tui.NewLogBuffer(200)
 			log.SetOutput(buf)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -39,5 +40,18 @@ func TestPermissionHint(t *testing.T) {
 	}
 	if permissionHint(nil) != nil {
 		t.Error("nil error became non-nil")
+	}
+}
+
+func TestConfirmUpdate(t *testing.T) {
+	cases := map[string]bool{"y\n": true, "YES\n": true, " y \n": true, "\n": false, "": false, "n\n": false, "j\n": false}
+	for in, want := range cases {
+		var out bytes.Buffer
+		if got := confirmUpdate(strings.NewReader(in), &out, "0.3.0"); got != want {
+			t.Errorf("confirmUpdate(%q) = %v, want %v", in, got, want)
+		}
+		if out.String() != "Update to v0.3.0? [y/N] " {
+			t.Errorf("prompt = %q", out.String())
+		}
 	}
 }

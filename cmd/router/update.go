@@ -1,14 +1,22 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
+	"os"
+	"strings"
+	"syscall"
+	"time"
 
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/spf13/cobra"
+
+	"github.com/SpielerNogard/claude-router/internal/config"
 )
 
 const updateRepo = "SpielerNogard/claude-router"
@@ -88,4 +96,44 @@ func newUpdateCmd() *cobra.Command {
 			return runUpdate(cmd.Context(), version, cmd.OutOrStdout())
 		},
 	}
+}
+
+func confirmUpdate(in io.Reader, out io.Writer, latest string) bool {
+	fmt.Fprintf(out, "Update to v%s? [y/N] ", latest)
+	line, _ := bufio.NewReader(in).ReadString('\n')
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case "y", "yes":
+		return true
+	}
+	return false
+}
+
+// startupUpdateCheck runs before the port is bound, so a re-exec never collides with our own listener or PID file.
+func startupUpdateCheck(cfg *config.Config, interactive bool) {
+	if !cfg.UpdateCheckEnabled() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	rel, err := latestRelease(ctx, version)
+	cancel()
+	if err != nil || rel == nil {
+		return
+	}
+	if !interactive {
+		log.Printf("v%s available – run claude-router update", rel.Version())
+		return
+	}
+	if !confirmUpdate(os.Stdin, os.Stdout, rel.Version()) {
+		return
+	}
+	if err := applyUpdate(context.Background(), rel); err != nil {
+		log.Printf("update failed: %v — starting v%s", err, version)
+		return
+	}
+	if exe, err := selfupdate.ExecutablePath(); err == nil {
+		syscall.Exec(exe, os.Args, os.Environ())
+	}
+	// Only reached when re-exec is unsupported (Windows) or failed.
+	fmt.Printf("updated v%s → v%s – please restart claude-router\n", version, rel.Version())
+	os.Exit(0)
 }
