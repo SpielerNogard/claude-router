@@ -55,3 +55,14 @@ func TestConfirmUpdate(t *testing.T) {
 		}
 	}
 }
+
+func TestNonReleaseVersionNeverChecks(t *testing.T) {
+	for _, v := range []string{"local", "72607f9"} {
+		if rel, err := latestRelease(context.Background(), v); rel != nil || err != nil {
+			t.Errorf("latestRelease(%q) = %v, %v; want nil, nil", v, rel, err)
+		}
+		if err := runUpdate(context.Background(), v, io.Discard); err == nil || !strings.Contains(err.Error(), "dev build") {
+			t.Errorf("runUpdate(%q) = %v; want dev build error", v, err)
+		}
+	}
+}

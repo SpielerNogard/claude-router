@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/spf13/cobra"
 
@@ -27,9 +28,15 @@ func newUpdater() (*selfupdate.Updater, error) {
 	})
 }
 
+// isReleaseBuild guards go-selfupdate, which panics comparing against a non-semver version.
+func isReleaseBuild(current string) bool {
+	_, err := semver.NewVersion(current)
+	return err == nil
+}
+
 // latestRelease returns nil when there is nothing to install; dev builds never ask GitHub.
 func latestRelease(ctx context.Context, current string) (*selfupdate.Release, error) {
-	if current == "dev" {
+	if !isReleaseBuild(current) {
 		return nil, nil
 	}
 	up, err := newUpdater()
@@ -66,8 +73,8 @@ func permissionHint(err error) error {
 }
 
 func runUpdate(ctx context.Context, current string, out io.Writer) error {
-	if current == "dev" {
-		return errors.New("this is a dev build — install a release binary to use update")
+	if !isReleaseBuild(current) {
+		return fmt.Errorf("this is a dev build (version %q) — install a release binary to use update", current)
 	}
 	rel, err := latestRelease(ctx, current)
 	if err != nil {
