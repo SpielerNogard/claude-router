@@ -59,6 +59,9 @@ func (m model) statusLine() string {
 }
 
 func (m model) overview() []string {
+	if m.width >= minCardWidth {
+		return m.cards()
+	}
 	var t store.Totals
 	if m.stats != nil {
 		t = m.stats.Totals
@@ -67,20 +70,7 @@ func (m model) overview() []string {
 		t.Requests, compact(t.InputTokens), compact(t.OutputTokens),
 		compact(t.CacheRead), compact(t.CacheWrite), hitRate(t), usd(t.CostUSD))
 
-	names := map[string]bool{}
-	for n := range m.limits {
-		names[n] = true
-	}
-	if m.stats != nil {
-		for n := range m.stats.ByProvider {
-			names[n] = true
-		}
-	}
-	sorted := make([]string, 0, len(names))
-	for n := range names {
-		sorted = append(sorted, n)
-	}
-	sort.Strings(sorted)
+	sorted := m.providerNames()
 
 	now := m.now()
 	var rows [][]string
@@ -113,6 +103,25 @@ func (m model) overview() []string {
 	return append([]string{kpi, ""}, table(header, rows, m.width, statusStyle)...)
 }
 
+// providerNames lists configured providers plus any that only appear in the stats, sorted.
+func (m model) providerNames() []string {
+	names := map[string]bool{}
+	for n := range m.limits {
+		names[n] = true
+	}
+	if m.stats != nil {
+		for n := range m.stats.ByProvider {
+			names[n] = true
+		}
+	}
+	sorted := make([]string, 0, len(names))
+	for n := range names {
+		sorted = append(sorted, n)
+	}
+	sort.Strings(sorted)
+	return sorted
+}
+
 func (m model) logLines() []string {
 	visible := 20
 	if m.height > 0 {
@@ -143,7 +152,11 @@ func (m model) logLines() []string {
 	if len(rows) == 0 {
 		return []string{styleDim.Render("no requests yet")}
 	}
-	return table(header, rows, m.width, errStyle)
+	if m.width < minCardWidth {
+		return table(header, rows, m.width, errStyle)
+	}
+	box := styleCard.Width(m.width - 2).Render(strings.Join(table(header, rows, m.width-4, errStyle), "\n"))
+	return strings.Split(box, "\n")
 }
 
 // table pads columns and drops them from the right until a row fits width (0 = unlimited), so narrow terminals never wrap.

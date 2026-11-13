@@ -142,7 +142,7 @@ func TestPollErrorKeepsData(t *testing.T) {
 	good.stats.Totals.Requests = 4242
 	m, _ := send(newTestModel(), tea.WindowSizeMsg{Width: 120, Height: 30}, good, snapshotMsg{err: errors.New("db locked")})
 	v := m.View()
-	if !strings.Contains(v, "4242") || !strings.Contains(v, "db locked") {
+	if !strings.Contains(v, "4,242") || !strings.Contains(v, "db locked") {
 		t.Errorf("view lost data or error:\n%s", v)
 	}
 }
