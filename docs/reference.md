@@ -6,6 +6,7 @@
 claude-router                    # start the router
 claude-router stop               # graceful shutdown
 claude-router check [provider]   # verify providers
+claude-router update             # install the latest release
 claude-router --help             # help; every subcommand has its own
 claude-router completion zsh     # shell completion (bash, zsh, fish)
 ```
@@ -68,6 +69,14 @@ On startup the router writes `router.pid` to the data directory. `stop` reads it
 `SIGTERM`, the same as `Ctrl+C` in the foreground. It detects and cleans up a stale file
 left by a hard kill. If no router is running, that's not an error (exit 0). Windows has no
 `SIGTERM`, so stop the router there with `Ctrl+C`.
+
+### `update`
+
+Downloads the latest GitHub release for your platform, verifies it against
+`checksums.txt` and replaces the running binary. A router that is already running keeps
+the old version until it restarts. If the binary sits in a directory you can't write to
+(e.g. `/usr/local/bin`), run `sudo claude-router update`. Dev builds refuse to update.
+On startup the router checks for updates itself, see [Configuration](configuration.md#update-check-update).
 
 ## HTTP API
 

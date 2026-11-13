@@ -59,6 +59,8 @@ Assets: `claude-router-darwin-arm64`, `-darwin-amd64`, `-linux-amd64`, `-linux-a
 download one with a browser, remove the quarantine flag with
 `xattr -d com.apple.quarantine claude-router`.
 
+Later versions install with `claude-router update`.
+
 ## Quick start
 
 ```bash
