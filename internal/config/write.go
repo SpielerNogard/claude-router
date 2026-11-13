@@ -93,5 +93,6 @@ func Redact(c *Config) map[string]any {
 		"listen":    c.Listen,
 		"log":       c.Log,
 		"providers": providers,
+		"update":    c.Update,
 	}
 }

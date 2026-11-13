@@ -168,6 +168,21 @@ func TestRedactKeepsRoundTrippedFields(t *testing.T) {
 	}
 }
 
+func TestRedactKeepsUpdateCheck(t *testing.T) {
+	off := false
+	raw, err := json.Marshal(Redact(&Config{Update: UpdateConfig{Check: &off}}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var back Config
+	if err := json.Unmarshal(raw, &back); err != nil {
+		t.Fatal(err)
+	}
+	if back.UpdateCheckEnabled() {
+		t.Errorf("update.check = false lost on write-back: %s", raw)
+	}
+}
+
 func TestValidateAcceptsFallback(t *testing.T) {
 	t.Setenv("DS_KEY", "sk-test")
 	cfg, err := Load(write(t, `
