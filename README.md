@@ -40,13 +40,28 @@ subscription runs dry, and see every token and every cent in a built-in dashboar
   instead of hanging.
 - **Single static binary** for macOS, Linux and Windows.
 
+## Install
+
+Download the binary for your platform from the
+[latest release](https://github.com/SpielerNogard/claude-router/releases/latest). The web UI
+is built in. For example, on Apple Silicon:
+
+```bash
+curl -fsSL -o claude-router \
+  https://github.com/SpielerNogard/claude-router/releases/latest/download/claude-router-darwin-arm64
+chmod +x claude-router
+sudo mv claude-router /usr/local/bin/
+claude-router --version
+```
+
+Assets: `claude-router-darwin-arm64`, `-darwin-amd64`, `-linux-amd64`, `-linux-arm64`,
+`-windows-amd64.exe`, plus `checksums.txt`. The macOS binaries aren't signed. If you
+download one with a browser, remove the quarantine flag with
+`xattr -d com.apple.quarantine claude-router`.
+
 ## Quick start
 
 ```bash
-git clone https://github.com/SpielerNogard/claude-router.git
-cd claude-router
-make build                  # needs Go 1.25+ and Node/npm; `make build UI=0` skips the UI
-
 mkdir -p ~/.config/claude-router
 cat > ~/.config/claude-router/config.toml <<'EOF'
 [server]
@@ -65,7 +80,7 @@ api_key_env = "DEEPSEEK_API_KEY"
 EOF
 
 export DEEPSEEK_API_KEY=...
-./claude-router &
+claude-router &
 ANTHROPIC_BASE_URL=http://127.0.0.1:4141 claude
 ```
 
@@ -79,7 +94,10 @@ first.
 
 ## Development
 
+Building from source needs Go 1.25+ and Node/npm (`make build UI=0` skips the UI).
+
 ```bash
+make build       # UI + binary → ./claude-router
 make test        # Go tests (-race)
 make ui-test     # frontend tests
 make release     # cross-compile into dist/

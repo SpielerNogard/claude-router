@@ -1,6 +1,48 @@
 # Getting started
 
-## Build
+## Install
+
+Download the binary for your platform from the
+[latest release](https://github.com/SpielerNogard/claude-router/releases/latest). The web UI
+is built in.
+
+=== "macOS (Apple Silicon)"
+
+    ```bash
+    curl -fsSL -o claude-router \
+      https://github.com/SpielerNogard/claude-router/releases/latest/download/claude-router-darwin-arm64
+    chmod +x claude-router && sudo mv claude-router /usr/local/bin/
+    ```
+
+=== "macOS (Intel)"
+
+    ```bash
+    curl -fsSL -o claude-router \
+      https://github.com/SpielerNogard/claude-router/releases/latest/download/claude-router-darwin-amd64
+    chmod +x claude-router && sudo mv claude-router /usr/local/bin/
+    ```
+
+=== "Linux"
+
+    ```bash
+    arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+    curl -fsSL -o claude-router \
+      "https://github.com/SpielerNogard/claude-router/releases/latest/download/claude-router-linux-$arch"
+    chmod +x claude-router && sudo mv claude-router /usr/local/bin/
+    ```
+
+=== "Windows"
+
+    Download `claude-router-windows-amd64.exe` from the release page and put it on your `PATH`.
+
+Check the install with `claude-router --version`. To verify the binary, compare it
+against `checksums.txt` from the release (`shasum -a 256 -c --ignore-missing checksums.txt`).
+
+!!! note "macOS Gatekeeper"
+    The binaries aren't signed. `curl` downloads are fine. If you downloaded with a
+    browser, run `xattr -d com.apple.quarantine claude-router` once.
+
+## Build from source
 
 You need Go 1.25+, and Node/npm for the web UI.
 
@@ -30,7 +72,7 @@ default = true
 ## Run
 
 ```bash
-./claude-router &
+claude-router &
 ANTHROPIC_BASE_URL=http://127.0.0.1:4141 claude
 ```
 
