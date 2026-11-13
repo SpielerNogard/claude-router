@@ -16,6 +16,8 @@ type StatsSeries struct {
 	OutputTokens []int64 `json:"output_tokens"`
 	CacheRead    []int64 `json:"cache_read"`
 	CacheWrite   []int64 `json:"cache_write"`
+	// Unknown prices add 0 here; the totals keep the null distinction.
+	CostUSD []float64 `json:"cost_usd"`
 }
 
 type Stats struct {
@@ -48,7 +50,10 @@ func (s *Store) Stats(since time.Time, step time.Duration, now time.Time) (*Stat
 	n := int(now.Sub(start)/step) + 1
 	st := &Stats{
 		ByProvider: map[string]Totals{}, Start: start, StepSec: int64(step / time.Second),
-		Series: StatsSeries{make([]int64, n), make([]int64, n), make([]int64, n), make([]int64, n)},
+		Series: StatsSeries{
+			InputTokens: make([]int64, n), OutputTokens: make([]int64, n),
+			CacheRead: make([]int64, n), CacheWrite: make([]int64, n), CostUSD: make([]float64, n),
+		},
 	}
 	rows, err := s.db.Query(`SELECT ts, provider, input_tokens, output_tokens, cache_read, cache_write, cost_usd
 FROM requests WHERE ts >= ? AND ts <= ?`, since.UTC().Unix(), now.UTC().Unix())
@@ -72,6 +77,9 @@ FROM requests WHERE ts >= ? AND ts <= ?`, since.UTC().Unix(), now.UTC().Unix())
 			st.Series.OutputTokens[i] += out
 			st.Series.CacheRead[i] += cr
 			st.Series.CacheWrite[i] += cw
+			if cost != nil {
+				st.Series.CostUSD[i] += *cost
+			}
 		}
 	}
 	return st, rows.Err()

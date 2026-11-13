@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -370,5 +372,57 @@ func TestCleanupDue(t *testing.T) {
 		if got := cleanupDue(tc.over, last, tc.now); got != tc.want {
 			t.Errorf("%s: cleanupDue = %v, want %v", tc.name, got, tc.want)
 		}
+	}
+}
+
+func TestUseTUI(t *testing.T) {
+	cases := []struct {
+		name                        string
+		noTUI, debug, stdin, stdout bool
+		want                        bool
+	}{
+		{"terminal", false, false, true, true, true},
+		{"--no-tui", true, false, true, true, false},
+		{"--debug", false, true, true, true, false},
+		{"stdin not a terminal", false, false, false, true, false},
+		{"stdout piped", false, false, true, false, false},
+	}
+	for _, c := range cases {
+		if got := useTUI(c.noTUI, c.debug, c.stdin, c.stdout); got != c.want {
+			t.Errorf("%s: useTUI = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestRunForegroundKeepsServingWhenUIFails(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		runForeground(ctx, func(context.Context) error { return errors.New("boom") })
+		close(done)
+	}()
+	select {
+	case <-done:
+		t.Fatal("router stopped because the UI failed")
+	case <-time.After(100 * time.Millisecond):
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("runForeground did not return after cancel")
+	}
+}
+
+func TestRunForegroundReturnsOnUIQuit(t *testing.T) {
+	done := make(chan struct{})
+	go func() {
+		runForeground(context.Background(), func(context.Context) error { return nil })
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("quit in the UI did not stop the router")
 	}
 }

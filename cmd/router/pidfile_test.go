@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -87,5 +88,35 @@ func TestResolveStopTargetFindsLiveProcess(t *testing.T) {
 	}
 	if pid != os.Getpid() {
 		t.Errorf("pid = %d, want %d", pid, os.Getpid())
+	}
+}
+
+func TestBindKeepsPidFileWhenPortBusy(t *testing.T) {
+	busy, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer busy.Close()
+	dir := t.TempDir()
+	if err := os.WriteFile(pidFilePath(dir), []byte("4242"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := bindAndWritePid(busy.Addr().String(), dir); err == nil {
+		t.Fatal("binding a busy port succeeded")
+	}
+	if b, _ := os.ReadFile(pidFilePath(dir)); string(b) != "4242" {
+		t.Errorf("PID file of the running router was overwritten with %q", b)
+	}
+}
+
+func TestBindWritesPidFile(t *testing.T) {
+	dir := t.TempDir()
+	ln, err := bindAndWritePid("127.0.0.1:0", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	if b, _ := os.ReadFile(pidFilePath(dir)); string(b) != strconv.Itoa(os.Getpid()) {
+		t.Errorf("PID file = %q", b)
 	}
 }

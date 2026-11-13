@@ -11,6 +11,7 @@ var (
 	flagConfig string
 	flagData   string
 	flagDebug  bool
+	flagNoTUI  bool
 
 	version = "dev" // set via -ldflags at release build
 )
@@ -28,13 +29,14 @@ func newRootCmd() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			runServer(flagConfig, flagData, flagDebug)
+			runServer(flagConfig, flagData, flagDebug, flagNoTUI)
 			return nil
 		},
 	}
 	root.PersistentFlags().StringVar(&flagConfig, "config", defaultConfigPath(), "path to config.toml")
 	root.PersistentFlags().StringVar(&flagData, "data", defaultDataDir(), "directory for databases and PID file")
 	root.Flags().BoolVar(&flagDebug, "debug", false, "log every request including translation steps")
+	root.Flags().BoolVar(&flagNoTUI, "no-tui", false, "show plain log output instead of the terminal UI")
 
 	root.AddCommand(newStopCmd(), newCheckCmd())
 	return root

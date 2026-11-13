@@ -22,7 +22,7 @@ func TestHelpListsAllCommands(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"stop", "check", "--config", "--data", "--debug"} {
+	for _, want := range []string{"stop", "check", "--config", "--data", "--debug", "--no-tui"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("%q missing from help:\n%s", want, out)
 		}
