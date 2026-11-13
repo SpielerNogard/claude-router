@@ -3,6 +3,8 @@ package tui
 import (
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpielerNogard/claude-router/internal/proxy"
@@ -58,6 +60,8 @@ type model struct {
 	width, height int
 	scroll        int
 	confirm       bool
+	keys          keyMap
+	help          help.Model
 
 	stats   *store.Stats
 	limits  map[string]proxy.ProviderLimitView
@@ -68,7 +72,7 @@ type model struct {
 }
 
 func newModel(src Source, logs *LogBuffer, listen string, now func() time.Time) model {
-	return model{src: src, logs: logs, listen: listen, now: now}
+	return model{src: src, logs: logs, listen: listen, now: now, keys: newKeyMap(), help: help.New()}
 }
 
 func (m model) Init() tea.Cmd { return m.fetch() }
@@ -94,6 +98,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
+		m.help.Width = msg.Width
 	case tickMsg:
 		return m, m.fetch()
 	case snapshotMsg:
@@ -136,7 +141,7 @@ func (m *model) apply(msg snapshotMsg) {
 }
 
 func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if k.Type == tea.KeyCtrlC {
+	if key.Matches(k, m.keys.ForceQuit) {
 		return m, tea.Quit
 	}
 	if m.confirm {
@@ -146,23 +151,28 @@ func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-	switch k.String() {
-	case "q":
+	switch {
+	case key.Matches(k, m.keys.Quit):
 		m.confirm = true
-	case "tab":
+	case key.Matches(k, m.keys.Help):
+		m.help.ShowAll = !m.help.ShowAll
+	case key.Matches(k, m.keys.Tab):
 		m.tab = (m.tab + 1) % 2
-	case "1":
-		m.tab = tabOverview
-	case "2":
-		m.tab = tabLogs
-	case "left":
-		m.rng = max(m.rng-1, 0)
-	case "right":
-		m.rng = min(m.rng+1, len(ranges)-1)
-	case "up":
-		m.scroll = max(m.scroll-1, 0)
-	case "down":
-		m.scroll = min(m.scroll+1, max(len(m.records)-1, 0))
+	case key.Matches(k, m.keys.Jump):
+		m.tab = map[string]int{"1": tabOverview, "2": tabLogs}[k.String()]
+	case key.Matches(k, m.keys.Range):
+		if k.String() == "left" {
+			m.rng = max(m.rng-1, 0)
+		} else {
+			m.rng = min(m.rng+1, len(ranges)-1)
+		}
+	case key.Matches(k, m.keys.Scroll):
+		if k.String() == "up" {
+			m.scroll = max(m.scroll-1, 0)
+		} else {
+			m.scroll = min(m.scroll+1, max(len(m.records)-1, 0))
+		}
 	}
+	m.keys = m.keys.forTab(m.tab)
 	return m, nil
 }

@@ -46,18 +46,16 @@ func (m model) header() string {
 		styleBold.Render("claude-router"), m.listen, tabs[0], tabs[1], ranges[m.rng].key)
 }
 
+// statusLine is the latest message above the always-visible key help.
 func (m model) statusLine() string {
+	info := styleDim.Render(m.logs.Last())
 	switch {
 	case m.confirm:
-		return styleBold.Render("Stop router? (y/n)")
+		info = styleBold.Render("Stop router? (y/n)")
 	case m.err != nil:
-		return styleBad.Render("error: " + m.err.Error())
+		info = styleBad.Render("error: " + m.err.Error())
 	}
-	hint := "tab switch · ←/→ range · ↑/↓ scroll · q quit"
-	if last := m.logs.Last(); last != "" {
-		hint = last
-	}
-	return styleDim.Render(hint)
+	return info + "\n" + m.help.View(m.keys)
 }
 
 func (m model) overview() []string {

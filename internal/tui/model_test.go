@@ -201,10 +201,49 @@ func TestStaleWindowShowsDash(t *testing.T) {
 }
 
 func TestScrollStaysOnRowWhenNewRecordsArrive(t *testing.T) {
-	m, _ := send(newTestModel(), snapshotMsg{records: recs(1, 10)}, tea.KeyMsg{Type: tea.KeyDown}, tea.KeyMsg{Type: tea.KeyDown})
+	m, _ := send(newTestModel(), snapshotMsg{records: recs(1, 10)}, runes("2"), tea.KeyMsg{Type: tea.KeyDown}, tea.KeyMsg{Type: tea.KeyDown})
 	top := m.records[m.scroll].ID
 	m, _ = send(m, snapshotMsg{records: recs(11, 13)})
 	if got := m.records[m.scroll].ID; got != top {
 		t.Errorf("top row moved from id %d to %d", top, got)
+	}
+}
+
+func TestRangeKeysOnlyOnOverview(t *testing.T) {
+	m, _ := send(newTestModel(), runes("2"), tea.KeyMsg{Type: tea.KeyRight})
+	if ranges[m.rng].key != "1h" {
+		t.Errorf("→ on Logs changed range to %s", ranges[m.rng].key)
+	}
+}
+
+func TestScrollKeysOnlyOnLogs(t *testing.T) {
+	m, _ := send(newTestModel(), snapshotMsg{records: recs(1, 10)}, tea.KeyMsg{Type: tea.KeyDown})
+	if m.scroll != 0 {
+		t.Errorf("↓ on Overview scrolled to %d", m.scroll)
+	}
+}
+
+func TestHelpLineAlwaysVisible(t *testing.T) {
+	m := newTestModel()
+	m.logs.Write([]byte("claude-router listening on 127.0.0.1:4141\n"))
+	m, _ = send(m, tea.WindowSizeMsg{Width: 120, Height: 30})
+	v := m.View()
+	if !strings.Contains(v, "listening on") || !strings.Contains(v, "quit") {
+		t.Errorf("log line and key help must both show:\n%s", v)
+	}
+}
+
+func TestHelpToggle(t *testing.T) {
+	m, _ := send(newTestModel(), tea.WindowSizeMsg{Width: 120, Height: 30})
+	if strings.Contains(m.View(), "ctrl+c") {
+		t.Fatal("full help shown before ?")
+	}
+	m, _ = send(m, runes("?"))
+	if !strings.Contains(m.View(), "ctrl+c") {
+		t.Fatal("? did not open full help")
+	}
+	m, _ = send(m, runes("?"))
+	if strings.Contains(m.View(), "ctrl+c") {
+		t.Fatal("? did not close full help")
 	}
 }
