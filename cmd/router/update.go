@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -52,6 +53,8 @@ func latestRelease(ctx context.Context, current string) (*selfupdate.Release, er
 	}
 	return rel, nil
 }
+
+var lookupLatest = latestRelease
 
 func applyUpdate(ctx context.Context, rel *selfupdate.Release) error {
 	exe, err := selfupdate.ExecutablePath()
@@ -121,13 +124,13 @@ func startupUpdateCheck(cfg *config.Config, interactive bool) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	rel, err := latestRelease(ctx, version)
+	rel, err := lookupLatest(ctx, version)
 	cancel()
 	if err != nil || rel == nil {
 		return
 	}
 	if !interactive {
-		log.Printf("v%s available – run claude-router update", rel.Version())
+		log.Printf("v%s available — run claude-router update", rel.Version())
 		return
 	}
 	if !confirmUpdate(os.Stdin, os.Stdout, rel.Version()) {
@@ -137,10 +140,14 @@ func startupUpdateCheck(cfg *config.Config, interactive bool) {
 		log.Printf("update failed: %v — starting v%s", err, version)
 		return
 	}
-	if exe, err := selfupdate.ExecutablePath(); err == nil {
-		syscall.Exec(exe, os.Args, os.Environ())
+	exe, err := selfupdate.ExecutablePath()
+	if err == nil {
+		err = syscall.Exec(exe, os.Args, os.Environ())
 	}
-	// Only reached when re-exec is unsupported (Windows) or failed.
-	fmt.Printf("updated v%s → v%s – please restart claude-router\n", version, rel.Version())
+	// Only reached when re-exec failed, or always on Windows, which has no exec.
+	if runtime.GOOS != "windows" {
+		log.Printf("restart failed: %v", err)
+	}
+	fmt.Printf("updated v%s → v%s — please restart claude-router\n", version, rel.Version())
 	os.Exit(0)
 }

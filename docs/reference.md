@@ -76,6 +76,8 @@ Downloads the latest GitHub release for your platform, verifies it against
 `checksums.txt` and replaces the running binary. A router that is already running keeps
 the old version until it restarts. If the binary sits in a directory you can't write to
 (e.g. `/usr/local/bin`), run `sudo claude-router update`. Dev builds refuse to update.
+The GitHub request sends `$GITHUB_TOKEN` if it is set; an expired token makes the
+check fail (silently at startup, with a 401 from `update`), so unset it in that case.
 On startup the router checks for updates itself, see [Configuration](configuration.md#update-check-update).
 
 ## HTTP API

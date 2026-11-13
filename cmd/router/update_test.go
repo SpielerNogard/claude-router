@@ -7,8 +7,14 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/creativeprojects/go-selfupdate"
+
+	"github.com/SpielerNogard/claude-router/internal/config"
 )
 
 func TestLatestReleaseSkipsDevBuild(t *testing.T) {
@@ -64,5 +70,29 @@ func TestNonReleaseVersionNeverChecks(t *testing.T) {
 		if err := runUpdate(context.Background(), v, io.Discard); err == nil || !strings.Contains(err.Error(), "dev build") {
 			t.Errorf("runUpdate(%q) = %v; want dev build error", v, err)
 		}
+	}
+}
+
+func TestStartupUpdateCheck(t *testing.T) {
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	t.Cleanup(func() { log.SetOutput(os.Stderr); lookupLatest = latestRelease })
+
+	called := false
+	lookupLatest = func(context.Context, string) (*selfupdate.Release, error) {
+		called = true
+		return nil, errors.New("offline")
+	}
+	off := false
+	startupUpdateCheck(&config.Config{Update: config.UpdateConfig{Check: &off}}, false)
+	if called {
+		t.Error("check = false still asked GitHub")
+	}
+	startupUpdateCheck(&config.Config{}, false)
+	if !called {
+		t.Error("enabled check did not ask GitHub")
+	}
+	if logs.Len() != 0 {
+		t.Errorf("lookup error was not silent: %q", logs.String())
 	}
 }
