@@ -80,13 +80,14 @@ api_key_env = "DEEPSEEK_API_KEY"
 EOF
 
 export DEEPSEEK_API_KEY=...
-claude-router &
+claude-router --no-tui &
 ANTHROPIC_BASE_URL=http://127.0.0.1:4141 claude
 ```
 
 In Claude Code, `/model deepseek:deepseek-chat` switches to DeepSeek. Model names without
 a prefix go to the `default` provider. To see the dashboard, open
-<http://127.0.0.1:4141/ui/>.
+<http://127.0.0.1:4141/ui/>. Started in the foreground of a terminal (without `&`), the router
+shows a terminal UI with provider status, usage and a live request log instead.
 
 API keys never go in the config file, only the name of the environment variable. If you
 expose the router beyond loopback, read [Security](https://spielernogard.github.io/claude-router/security/)

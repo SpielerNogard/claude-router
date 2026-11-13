@@ -372,3 +372,22 @@ func TestCleanupDue(t *testing.T) {
 		}
 	}
 }
+
+func TestUseTUI(t *testing.T) {
+	cases := []struct {
+		name                        string
+		noTUI, debug, stdin, stdout bool
+		want                        bool
+	}{
+		{"terminal", false, false, true, true, true},
+		{"--no-tui", true, false, true, true, false},
+		{"--debug", false, true, true, true, false},
+		{"stdin not a terminal", false, false, false, true, false},
+		{"stdout piped", false, false, true, false, false},
+	}
+	for _, c := range cases {
+		if got := useTUI(c.noTUI, c.debug, c.stdin, c.stdout); got != c.want {
+			t.Errorf("%s: useTUI = %v, want %v", c.name, got, c.want)
+		}
+	}
+}

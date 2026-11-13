@@ -19,8 +19,8 @@ func (fakeSource) Stats(time.Time, time.Duration, time.Time) (*store.Stats, erro
 	return &store.Stats{}, nil
 }
 func (fakeSource) Recent(store.RequestFilter) ([]store.Record, int, error) { return nil, 0, nil }
-func (fakeSource) Limits() map[string]proxy.ProviderLimitView                { return nil }
-func (fakeSource) Blocked() map[string]string                               { return nil }
+func (fakeSource) Limits() map[string]proxy.ProviderLimitView              { return nil }
+func (fakeSource) Blocked() map[string]string                              { return nil }
 
 var testNow = time.Date(2026, 11, 13, 12, 0, 0, 0, time.UTC)
 

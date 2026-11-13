@@ -22,7 +22,9 @@ import (
 	"github.com/SpielerNogard/claude-router/internal/discover"
 	"github.com/SpielerNogard/claude-router/internal/proxy"
 	"github.com/SpielerNogard/claude-router/internal/store"
+	"github.com/SpielerNogard/claude-router/internal/tui"
 	"github.com/SpielerNogard/claude-router/web"
+	"github.com/mattn/go-isatty"
 )
 
 type deps struct {
@@ -134,7 +136,7 @@ func withAPIToken(token string, gateV1 func() bool, next http.Handler) http.Hand
 }
 
 // Flags may precede or follow the subcommand: "--config x check" equals "check --config x".
-func runServer(configPathArg, dataDirArg string, debugOn bool) {
+func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 	configPath, dataDir, debug := &configPathArg, &dataDirArg, &debugOn
 
 	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
@@ -206,18 +208,39 @@ func runServer(configPathArg, dataDirArg string, debugOn bool) {
 		ReadHeaderTimeout: 20 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
+	// Bind before the TUI takes the terminal, so "address already in use" prints as a plain error.
+	ln, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	serveErr := make(chan error, 1)
 	go func() {
 		log.Printf("claude-router listening on %s", srv.Addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+		if err := srv.Serve(ln); err != nil && err != http.ErrServerClosed {
+			serveErr <- err
+			stop()
 		}
 	}()
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	<-sig
+	if useTUI(noTUI, *debug, isatty.IsTerminal(os.Stdin.Fd()) && foreground(os.Stdin.Fd()), isatty.IsTerminal(os.Stdout.Fd())) {
+		buf := tui.NewLogBuffer(200)
+		log.SetOutput(buf)
+		err := tui.Run(ctx, tuiSource{metrics, px}, buf, listenAddr)
+		log.SetOutput(os.Stderr)
+		if err != nil {
+			log.Printf("terminal UI: %v", err)
+		}
+	} else {
+		<-ctx.Done()
+	}
 	// Restore default handling so a second Ctrl+C exits even while shutdown waits on a hanging request.
-	signal.Stop(sig)
+	stop()
+	select {
+	case err := <-serveErr:
+		log.Fatal(err)
+	default:
+	}
 	log.Printf("shutting down — press Ctrl+C again to abort immediately")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
