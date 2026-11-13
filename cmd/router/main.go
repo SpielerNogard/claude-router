@@ -159,8 +159,10 @@ func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 	if err := os.Chmod(*dataDir, 0o700); err != nil {
 		log.Printf("data directory permissions: %v", err)
 	}
-	if err := writePidFile(*dataDir); err != nil {
-		log.Printf("PID file: %v — stop will not find this router", err)
+	// Bind before the TUI takes the terminal, so "address already in use" prints as a plain error.
+	ln, err := bindAndWritePid(cfg.Listen, *dataDir)
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer removePidFile(*dataDir)
 	metrics, err := store.Open(filepath.Join(*dataDir, "metrics.db"))
@@ -207,11 +209,6 @@ func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 		// No ReadTimeout/WriteTimeout: long streams are the norm here.
 		ReadHeaderTimeout: 20 * time.Second,
 		IdleTimeout:       120 * time.Second,
-	}
-	// Bind before the TUI takes the terminal, so "address already in use" prints as a plain error.
-	ln, err := net.Listen("tcp", listenAddr)
-	if err != nil {
-		log.Fatal(err)
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	serveErr := make(chan error, 1)

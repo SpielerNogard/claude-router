@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -20,6 +22,18 @@ func pidFilePath(dataDir string) string { return filepath.Join(dataDir, pidFileN
 
 func writePidFile(dataDir string) error {
 	return os.WriteFile(pidFilePath(dataDir), []byte(strconv.Itoa(os.Getpid())), 0o600)
+}
+
+// bindAndWritePid claims the port before the PID file, so a second instance on a busy port can't overwrite the running router's PID.
+func bindAndWritePid(listen, dataDir string) (net.Listener, error) {
+	ln, err := net.Listen("tcp", listen)
+	if err != nil {
+		return nil, err
+	}
+	if err := writePidFile(dataDir); err != nil {
+		log.Printf("PID file: %v — stop will not find this router", err)
+	}
+	return ln, nil
 }
 
 func removePidFile(dataDir string) {
