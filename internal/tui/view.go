@@ -29,6 +29,10 @@ func (m model) View() string {
 	} else {
 		lines = append(lines, m.logLines()...)
 	}
+	// bubbletea drops the top lines of a frame taller than the terminal, which would hide the tabs.
+	if h := m.bodyHeight(); h >= 0 && len(lines)-2 > h {
+		lines = lines[:2+h]
+	}
 	lines = append(lines, "", m.statusLine())
 	if m.width > 0 {
 		clip := lipgloss.NewStyle().MaxWidth(m.width)
@@ -58,9 +62,19 @@ func (m model) statusLine() string {
 	return info + "\n" + m.help.View(m.keys)
 }
 
+// bodyHeight is the room between header and status lines, -1 before the first WindowSizeMsg.
+func (m model) bodyHeight() int {
+	if m.height == 0 {
+		return -1
+	}
+	return max(m.height-3-lipgloss.Height(m.statusLine()), 1)
+}
+
 func (m model) overview() []string {
 	if m.width >= minCardWidth {
-		return m.cards()
+		if c := m.cards(); m.height == 0 || len(c) <= m.bodyHeight() {
+			return c
+		}
 	}
 	var t store.Totals
 	if m.stats != nil {
@@ -124,8 +138,12 @@ func (m model) providerNames() []string {
 
 func (m model) logLines() []string {
 	visible := 20
-	if m.height > 0 {
-		visible = max(m.height-6, 1)
+	if h := m.bodyHeight(); h >= 0 {
+		chrome := 1 // table header
+		if m.width >= minCardWidth {
+			chrome = 3 // plus box border
+		}
+		visible = max(h-chrome, 1)
 	}
 	start := min(m.scroll, len(m.records))
 	end := min(start+visible, len(m.records))

@@ -7,16 +7,18 @@ import (
 
 var sparkGlyphs = []rune("▁▂▃▄▅▆▇█")
 
-// resample sums consecutive buckets so a long range fits the card width.
+// resample averages consecutive buckets so a long range fits the card width; sums would turn uneven group sizes into fake spikes.
 func resample(vals []float64, width int) []float64 {
 	if width <= 0 || len(vals) <= width {
 		return vals
 	}
 	out := make([]float64, width)
 	for i := range out {
-		for _, v := range vals[i*len(vals)/width : (i+1)*len(vals)/width] {
+		group := vals[i*len(vals)/width : (i+1)*len(vals)/width]
+		for _, v := range group {
 			out[i] += v
 		}
+		out[i] /= float64(len(group))
 	}
 	return out
 }
@@ -38,7 +40,7 @@ func sparkline(vals []float64, width int) string {
 		case top == 0:
 			b.WriteRune(sparkGlyphs[0])
 		default:
-			b.WriteRune(sparkGlyphs[int(math.Round(v/top*float64(len(sparkGlyphs)-1)))])
+			b.WriteRune(sparkGlyphs[max(0, int(math.Round(v/top*float64(len(sparkGlyphs)-1))))])
 		}
 	}
 	return b.String()

@@ -121,3 +121,29 @@ func TestBarsAligned(t *testing.T) {
 		t.Errorf("percent columns differ: %v", cols)
 	}
 }
+
+func linesOf(v string) []string { return strings.Split(v, "\n") }
+
+func TestLogsFitHeight(t *testing.T) {
+	msg := busySnapshot()
+	msg.records = recs(1, 100)
+	for _, w := range []int{50, 120} {
+		for _, extra := range [][]tea.Msg{nil, {runes("?")}} {
+			m, _ := send(newTestModel(), append([]tea.Msg{tea.WindowSizeMsg{Width: w, Height: 24}, msg, runes("2")}, extra...)...)
+			if lines := linesOf(m.View()); len(lines) > 24 || !strings.Contains(lines[0], "Logs") {
+				t.Errorf("width %d help %v: %d lines, first %q", w, extra != nil, len(lines), lines[0])
+			}
+		}
+	}
+}
+
+func TestOverviewFitsHeight(t *testing.T) {
+	m, _ := send(newTestModel(), tea.WindowSizeMsg{Width: 80, Height: 24}, busySnapshot())
+	if lines := linesOf(m.View()); len(lines) > 24 || !strings.Contains(lines[0], "Overview") {
+		t.Errorf("80x24: %d lines, first %q", len(lines), lines[0])
+	}
+	m, _ = send(newTestModel(), tea.WindowSizeMsg{Width: 150, Height: 50}, busySnapshot())
+	if v := m.View(); !strings.Contains(v, "╭") || len(linesOf(v)) > 50 {
+		t.Errorf("150x50 should show cards within height:\n%s", v)
+	}
+}

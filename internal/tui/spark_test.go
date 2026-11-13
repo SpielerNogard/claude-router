@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func TestResampleSums(t *testing.T) {
-	if got := resample([]float64{1, 2, 3, 4}, 2); !reflect.DeepEqual(got, []float64{3, 7}) {
+func TestResampleAverages(t *testing.T) {
+	if got := resample([]float64{1, 2, 3, 4}, 2); !reflect.DeepEqual(got, []float64{1.5, 3.5}) {
 		t.Errorf("got %v", got)
 	}
 }
@@ -53,4 +53,21 @@ func TestHitSeries(t *testing.T) {
 	if len(got) != 2 || got[0] != 0.6 || !math.IsNaN(got[1]) {
 		t.Errorf("got %v", got)
 	}
+}
+
+func TestSparklineConstantIsFlat(t *testing.T) {
+	vals := make([]float64, 57)
+	for i := range vals {
+		vals[i] = 1
+	}
+	got := []rune(sparkline(vals, 24))
+	for _, r := range got {
+		if r != got[0] {
+			t.Fatalf("constant input drew %q", string(got))
+		}
+	}
+}
+
+func TestSparklineNegativeNoPanic(t *testing.T) {
+	_ = sparkline([]float64{-1, 2}, 5)
 }
