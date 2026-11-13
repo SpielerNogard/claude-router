@@ -35,4 +35,7 @@ func TestStatsTotalsByProviderAndSeries(t *testing.T) {
 	if len(st.Series.InputTokens) != 3 || st.Series.InputTokens[0] != 10 || st.Series.InputTokens[1] != 20 || st.Series.InputTokens[2] != 0 {
 		t.Errorf("series = %+v (start %v)", st.Series.InputTokens, st.Start)
 	}
+	if len(st.Series.CostUSD) != 3 || st.Series.CostUSD[0] != 0.5 || st.Series.CostUSD[1] != 0 {
+		t.Errorf("cost series = %+v", st.Series.CostUSD)
+	}
 }
