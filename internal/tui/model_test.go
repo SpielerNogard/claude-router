@@ -189,3 +189,22 @@ func TestLogsTabShowsRecords(t *testing.T) {
 		}
 	}
 }
+
+func TestStaleWindowShowsDash(t *testing.T) {
+	msg := twoProviders()
+	msg.limits["subscription"] = proxy.ProviderLimitView{Kind: "window", ProviderLimits: proxy.ProviderLimits{
+		Windows: map[string]proxy.LimitWindow{"5h": {Utilization: 1, Reset: testNow.Add(-time.Minute)}}}}
+	m, _ := send(newTestModel(), tea.WindowSizeMsg{Width: 120, Height: 30}, msg)
+	if strings.Contains(m.View(), "100%") {
+		t.Errorf("stale window still shows its old utilization:\n%s", m.View())
+	}
+}
+
+func TestScrollStaysOnRowWhenNewRecordsArrive(t *testing.T) {
+	m, _ := send(newTestModel(), snapshotMsg{records: recs(1, 10)}, tea.KeyMsg{Type: tea.KeyDown}, tea.KeyMsg{Type: tea.KeyDown})
+	top := m.records[m.scroll].ID
+	m, _ = send(m, snapshotMsg{records: recs(11, 13)})
+	if got := m.records[m.scroll].ID; got != top {
+		t.Errorf("top row moved from id %d to %d", top, got)
+	}
+}

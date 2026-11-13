@@ -129,6 +129,10 @@ func (m *model) apply(msg snapshotMsg) {
 	if len(m.records) > maxRecords {
 		m.records = m.records[:maxRecords]
 	}
+	// Keep a scrolled-down view on the same row instead of drifting as new requests arrive on top.
+	if m.scroll > 0 {
+		m.scroll = min(m.scroll+len(fresh), len(m.records)-1)
+	}
 }
 
 func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {

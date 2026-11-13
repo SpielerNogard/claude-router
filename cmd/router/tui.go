@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"log"
+
 	"github.com/SpielerNogard/claude-router/internal/proxy"
 	"github.com/SpielerNogard/claude-router/internal/store"
 )
@@ -17,3 +20,11 @@ type tuiSource struct {
 
 func (s tuiSource) Limits() map[string]proxy.ProviderLimitView { return s.proxy.ProviderLimits() }
 func (s tuiSource) Blocked() map[string]string                 { return s.proxy.BlockedProviders() }
+
+// runForeground blocks while the router serves; only a deliberate quit in the UI ends it early, a broken UI must not take the proxy down.
+func runForeground(ctx context.Context, ui func(context.Context) error) {
+	if err := ui(ctx); err != nil {
+		log.Printf("terminal UI: %v — continuing with plain logs", err)
+		<-ctx.Done()
+	}
+}

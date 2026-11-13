@@ -224,13 +224,12 @@ func runServer(configPathArg, dataDirArg string, debugOn, noTUI bool) {
 	}()
 
 	if useTUI(noTUI, *debug, isatty.IsTerminal(os.Stdin.Fd()) && foreground(os.Stdin.Fd()), isatty.IsTerminal(os.Stdout.Fd())) {
-		buf := tui.NewLogBuffer(200)
-		log.SetOutput(buf)
-		err := tui.Run(ctx, tuiSource{metrics, px}, buf, listenAddr)
-		log.SetOutput(os.Stderr)
-		if err != nil {
-			log.Printf("terminal UI: %v", err)
-		}
+		runForeground(ctx, func(ctx context.Context) error {
+			buf := tui.NewLogBuffer(200)
+			log.SetOutput(buf)
+			defer log.SetOutput(os.Stderr)
+			return tui.Run(ctx, tuiSource{metrics, px}, buf, listenAddr)
+		})
 	} else {
 		<-ctx.Done()
 	}

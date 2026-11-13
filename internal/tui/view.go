@@ -93,7 +93,7 @@ func (m model) overview() []string {
 		}
 		v := m.limits[n]
 		window := func(name string) string {
-			if w, ok := v.Windows[name]; ok {
+			if w, ok := v.Windows[name]; ok && level(w, now) != "stale" {
 				return fmt.Sprintf("%.0f%%", w.Utilization*100)
 			}
 			return dash
