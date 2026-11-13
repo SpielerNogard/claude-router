@@ -46,6 +46,16 @@ type Config struct {
 	StreamIdle *time.Duration      `toml:"-" json:"stream_idle_timeout"`
 	Log        LogConfig           `toml:"log" json:"log"`
 	Providers  map[string]Provider `toml:"providers" json:"providers"`
+	Update     UpdateConfig        `toml:"update,omitempty" json:"update"`
+}
+
+type UpdateConfig struct {
+	Check *bool `toml:"check" json:"check"`
+}
+
+// UpdateCheckEnabled reports whether startup may ask GitHub for a newer release; unset means yes.
+func (c *Config) UpdateCheckEnabled() bool {
+	return c.Update.Check == nil || *c.Update.Check
 }
 
 func Load(path string) (*Config, error) {

@@ -266,3 +266,47 @@ auth = "passthrough"
 		t.Errorf("Default read incorrectly: %+v", c.Providers)
 	}
 }
+
+const minimalProvider = `
+[providers.sub]
+format = "anthropic"
+auth   = "passthrough"
+`
+
+func TestUpdateCheckDefaultsToEnabled(t *testing.T) {
+	c, err := Load(write(t, minimalProvider))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.UpdateCheckEnabled() {
+		t.Error("UpdateCheckEnabled() = false without [update], want true")
+	}
+	out, err := Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(out), "[update]") {
+		t.Errorf("Marshal wrote an empty [update] table:\n%s", out)
+	}
+}
+
+func TestUpdateCheckCanBeDisabled(t *testing.T) {
+	c, err := Load(write(t, minimalProvider+"\n[update]\ncheck = false\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.UpdateCheckEnabled() {
+		t.Fatal("UpdateCheckEnabled() = true with check = false")
+	}
+	out, err := Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, err := Load(write(t, string(out)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again.UpdateCheckEnabled() {
+		t.Errorf("check = false lost on round trip:\n%s", out)
+	}
+}
