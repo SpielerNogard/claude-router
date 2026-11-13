@@ -35,9 +35,13 @@ Bodies are capped at 4 KB. This works independently of `log.level`.
 ### `--no-tui`
 
 When the router runs in the foreground of a terminal, it shows a terminal UI instead of log
-lines: an **Overview** tab with provider status, requests, tokens, cache hit rate and cost,
-and a **Logs** tab with the latest requests. Keys: `Tab`/`1`/`2` switch tabs, `←`/`→` change
-the time range, `↑`/`↓` scroll, `q` asks before stopping the router, `Ctrl+C` stops it.
+lines: an **Overview** tab with request, token, cache hit rate and cost cards (with sparklines
+over the selected range) and provider cards with their 5h/7d limits, and a **Logs** tab with
+the latest requests. Keys: `Tab`/`1`/`2` switch tabs, `←`/`→` change the time range (Overview),
+`↑`/`↓` scroll (Logs), `?` shows all keys, `q` asks before stopping the router, `Ctrl+C` stops it.
+On terminals narrower than 60 columns or too short for the cards, the Overview shows a compact table.
+
+![Terminal UI overview with KPI cards, sparklines and provider limits](assets/tui.png)
 
 `--no-tui` turns this off. Without a terminal (service, pipe, background job) and with
 `--debug`, the router always prints plain logs.
