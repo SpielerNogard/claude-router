@@ -26,6 +26,11 @@ Rate-limit data comes from the last response's `anthropic-ratelimit-unified-*` h
 is held in memory only. It's empty after a restart, and for an account that hasn't been
 used yet, which shows "no data yet". The same data is available from `GET /api/limits`.
 
+Accounts that serve the same model (the `default` provider and its provider-only fallbacks) get
+an **Activate** button on their tile. The chosen account serves unprefixed models first; the others
+stay behind it as fallbacks. The choice is runtime only and resets to `default` on restart
+(`GET`/`PUT /api/active`).
+
 ## Usage
 
 Totals for the last 7/30/90 days by model, provider or client, with a cost donut.

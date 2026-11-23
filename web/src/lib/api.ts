@@ -49,6 +49,7 @@ export type Stats = {
   series: { input_tokens: number[]; output_tokens: number[]; cache_read: number[]; cache_write: number[] }
 }
 export type Health = { status: string; blocked?: Record<string, string> }
+export type Active = { active: string; accounts: string[] }
 
 export class AuthError extends Error {}
 
@@ -75,11 +76,19 @@ export function setToken(t: string | null): void {
   }
 }
 
-export async function getJSON<T>(path: string, fetchFn: typeof fetch = fetch): Promise<T> {
+export function getJSON<T>(path: string, fetchFn: typeof fetch = fetch): Promise<T> {
+  return request<T>(path, {}, {}, fetchFn)
+}
+
+export function putJSON<T>(path: string, body: unknown, fetchFn: typeof fetch = fetch): Promise<T> {
+  return request<T>(path, { method: 'PUT', body: JSON.stringify(body) }, { 'Content-Type': 'application/json' }, fetchFn)
+}
+
+async function request<T>(path: string, init: RequestInit, headers: Record<string, string>, fetchFn: typeof fetch): Promise<T> {
   const token = getToken()
   let res: Response
   try {
-    res = await fetchFn(path, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    res = await fetchFn(path, { ...init, headers: token ? { Authorization: `Bearer ${token}`, ...headers } : headers })
   } catch (e) {
     connected.value = false
     throw e

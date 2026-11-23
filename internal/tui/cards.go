@@ -103,6 +103,9 @@ func (m model) providerCard(name string, outer int) string {
 	now := m.now()
 	v := m.limits[name]
 	title := styleBold.Render(name)
+	if name == m.active && len(m.accounts) > 1 {
+		title += " " + styleLevel["ok"].Render("● active")
+	}
 	switch status := providerStatus(v, m.blocked[name], now); {
 	case strings.HasPrefix(status, "blocked"):
 		title += " " + styleBad.Render(status)

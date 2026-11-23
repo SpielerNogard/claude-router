@@ -61,6 +61,8 @@ tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, transparent
 .tile { padding: .8rem 1rem; display: grid; grid-template-columns: 2rem 1fr 3.2rem auto; gap: .45rem .5rem; }
 .tile > * { grid-column: 1 / -1; }
 .tile-head { display: flex; gap: .6rem; align-items: baseline; }
+.badge-active { color: var(--ok); font-size: .85rem; }
+.note.bad { color: var(--bad); }
 .win { display: grid; grid-template-columns: subgrid; align-items: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
 .win .bar { height: .5rem; border-radius: 999px; background: var(--line); overflow: hidden; }
 .win .bar span { display: block; height: 100%; background: linear-gradient(90deg, color-mix(in srgb, var(--ok) 60%, transparent), var(--ok)); }

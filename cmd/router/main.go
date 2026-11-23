@@ -49,6 +49,8 @@ func registerRoutes(mux *http.ServeMux, d deps) {
 	mux.HandleFunc("GET /api/messages/by-request/{request_id}", api.MessagesByRequest(d.log))
 	mux.HandleFunc("GET /api/config", api.GetConfig(d.reg))
 	mux.HandleFunc("PUT /api/config", api.PutConfig(d.reg))
+	mux.HandleFunc("GET /api/active", api.GetActive(d.proxy))
+	mux.HandleFunc("PUT /api/active", api.PutActive(d.proxy))
 	mux.HandleFunc("GET /healthz", api.Health(d.proxy.BlockedProviders))
 	mux.Handle("GET /ui/", web.Handler(web.Dist()))
 }

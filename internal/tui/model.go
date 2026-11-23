@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"slices"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -19,6 +20,8 @@ type Source interface {
 	Recent(f store.RequestFilter) ([]store.Record, int, error)
 	Limits() map[string]proxy.ProviderLimitView
 	Blocked() map[string]string
+	Active() (string, []string)
+	SetActive(string) error
 }
 
 // Same ranges and steps as web/src/lib/live.ts.
@@ -40,12 +43,15 @@ const (
 )
 
 type snapshotMsg struct {
-	rng     int
-	stats   *store.Stats
-	limits  map[string]proxy.ProviderLimitView
-	blocked map[string]string
-	records []store.Record
-	err     error
+	rng       int
+	stats     *store.Stats
+	limits    map[string]proxy.ProviderLimitView
+	blocked   map[string]string
+	records   []store.Record
+	active    string
+	accounts  []string
+	activeSeq int
+	err       error
 }
 
 type tickMsg struct{}
@@ -69,6 +75,10 @@ type model struct {
 	records []store.Record
 	lastID  int64
 	err     error
+
+	active    string
+	accounts  []string
+	activeSeq int
 }
 
 func newModel(src Source, logs *LogBuffer, listen string, now func() time.Time) model {
@@ -79,7 +89,7 @@ func (m model) Init() tea.Cmd { return m.fetch() }
 
 // fetch runs as a tea.Cmd, off the UI goroutine; the next tick is scheduled only after it returns, so slow queries never pile up.
 func (m model) fetch() tea.Cmd {
-	src, rng, after, now := m.src, m.rng, m.lastID, m.now()
+	src, rng, after, now, seq := m.src, m.rng, m.lastID, m.now(), m.activeSeq
 	return func() tea.Msg {
 		r := ranges[rng]
 		st, err := src.Stats(now.Add(-r.span), r.step, now)
@@ -90,7 +100,9 @@ func (m model) fetch() tea.Cmd {
 		if err != nil {
 			return snapshotMsg{rng: rng, err: err}
 		}
-		return snapshotMsg{rng: rng, stats: st, limits: src.Limits(), blocked: src.Blocked(), records: recs}
+		active, accounts := src.Active()
+		return snapshotMsg{rng: rng, stats: st, limits: src.Limits(), blocked: src.Blocked(), records: recs,
+			active: active, accounts: accounts, activeSeq: seq}
 	}
 }
 
@@ -120,6 +132,10 @@ func (m *model) apply(msg snapshotMsg) {
 		m.stats = msg.stats
 	}
 	m.limits, m.blocked = msg.limits, msg.blocked
+	// A snapshot fetched before a switch would flick the old account back for a tick.
+	if msg.activeSeq == m.activeSeq {
+		m.active, m.accounts = msg.active, msg.accounts
+	}
 	var fresh []store.Record
 	for _, r := range msg.records {
 		if r.ID > m.lastID {
@@ -160,6 +176,14 @@ func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.tab = (m.tab + 1) % 2
 	case key.Matches(k, m.keys.Jump):
 		m.tab = map[string]int{"1": tabOverview, "2": tabLogs}[k.String()]
+	case key.Matches(k, m.keys.Active) && m.tab == tabOverview && len(m.accounts) > 1:
+		next := m.accounts[(slices.Index(m.accounts, m.active)+1)%len(m.accounts)]
+		if err := m.src.SetActive(next); err != nil {
+			m.err = err
+		} else {
+			m.active = next
+			m.activeSeq++
+		}
 	case key.Matches(k, m.keys.Range):
 		if k.String() == "left" {
 			m.rng = max(m.rng-1, 0)

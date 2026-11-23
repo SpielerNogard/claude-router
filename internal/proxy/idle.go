@@ -73,7 +73,7 @@ func (e *StallError) Error() string {
 // streamIdle returns the configured idle limit, or the default.
 // An explicit 0 disables the watchdog.
 func (px *Proxy) streamIdle() time.Duration {
-	if d := px.cfg().StreamIdle; d != nil {
+	if d := px.config().StreamIdle; d != nil {
 		return *d
 	}
 	return defaultStreamIdle

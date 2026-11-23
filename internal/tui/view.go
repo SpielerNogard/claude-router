@@ -100,7 +100,11 @@ func (m model) overview() []string {
 			}
 			return dash
 		}
-		rows = append(rows, []string{n, providerStatus(v, m.blocked[n], now), window("5h"), window("7d"),
+		name := n
+		if n == m.active && len(m.accounts) > 1 {
+			name += " ●"
+		}
+		rows = append(rows, []string{name, providerStatus(v, m.blocked[n], now), window("5h"), window("7d"),
 			fmt.Sprint(pt.Requests), compact(pt.InputTokens), compact(pt.OutputTokens), hitRate(pt), usd(pt.CostUSD)})
 	}
 	header := []string{"Provider", "Status", "5h", "7d", "Req", "In", "Out", "Hit", "Cost"}

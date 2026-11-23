@@ -39,6 +39,7 @@ When the router runs in the foreground of a terminal, it shows a terminal UI ins
 lines: an **Overview** tab with request, token, cache hit rate and cost cards (with sparklines
 over the selected range) and provider cards with their 5h/7d limits, and a **Logs** tab with
 the latest requests. Keys: `Tab`/`1`/`2` switch tabs, `←`/`→` change the time range (Overview),
+`a` switches the account serving unprefixed models (Overview, runtime only; the chosen account moves to the front of the fallback chain),
 `↑`/`↓` scroll (Logs), `?` shows all keys, `q` asks before stopping the router, `Ctrl+C` stops it.
 On terminals narrower than 60 columns or too short for the cards, the Overview shows a compact table.
 
@@ -95,5 +96,6 @@ On startup the router checks for updates itself, see [Configuration](configurati
 | `GET /api/messages`, `GET /api/messages/{id}` | Message log |
 | `GET /api/messages/by-request/{request_id}` | All logged documents of one request |
 | `GET /api/config`, `PUT /api/config` | Read and write the configuration |
+| `GET /api/active`, `PUT /api/active` | Read and switch the account serving unprefixed models (`{"provider":"konto2"}`); runtime only |
 | `POST /api/models/refresh` | Re-run model discovery |
 | `GET /ui/` | Web UI |

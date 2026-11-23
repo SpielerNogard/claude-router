@@ -73,7 +73,7 @@ type ProviderLimitView struct {
 func (px *Proxy) ProviderLimits() map[string]ProviderLimitView {
 	seen := px.limits.snapshot()
 	out := map[string]ProviderLimitView{}
-	for name, p := range px.cfg().Providers {
+	for name, p := range px.config().Providers {
 		if p.Format != "anthropic" {
 			out[name] = ProviderLimitView{Kind: "unlimited"}
 			continue

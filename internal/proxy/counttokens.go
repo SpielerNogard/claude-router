@@ -24,7 +24,7 @@ func (px *Proxy) CountTokens(w http.ResponseWriter, r *http.Request) {
 		estimateResponse(w, body)
 		return
 	}
-	tgt, rerr := Resolve(px.cfg(), a.Model)
+	tgt, rerr := Resolve(px.config(), a.Model)
 	if rerr != nil || tgt.Provider.Format != "anthropic" {
 		estimateResponse(w, body)
 		return
