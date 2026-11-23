@@ -143,6 +143,10 @@ func (px *Proxy) Messages(w http.ResponseWriter, r *http.Request) {
 		writeError(w, rerr.Status, rerr.Kind, rerr.Message)
 		return
 	}
+	// The alias stays what the config maps the name to, so usage by alias does not split with the active account.
+	if base, berr := Resolve(px.cfg(), a.Model); berr == nil {
+		tgt.Alias = base.Alias
+	}
 	tgt = px.applyCooldown(tgt)
 	wantAlias := tgt.Alias
 	if px.debug {

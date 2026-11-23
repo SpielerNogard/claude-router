@@ -194,6 +194,9 @@ func TestPrefixedFormerDefaultFallsToTail(t *testing.T) {
 	if got := r.post(t, "abo:opus-5"); got != "deepseek" {
 		t.Errorf("served by %q, want deepseek", got)
 	}
+	if r.calls["abo"] != 1 {
+		t.Errorf("abo called %d times, want 1: the prefixed provider is tried first", r.calls["abo"])
+	}
 	if r.calls["konto2"] != 0 {
 		t.Errorf("konto2 called %d times, want 0: abo now falls back to the tail", r.calls["konto2"])
 	}
@@ -216,4 +219,17 @@ func TestSetActiveConcurrentWithRequests(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+func TestActiveKeepsRequestedAlias(t *testing.T) {
+	r := newAccountRig(t)
+	if err := r.px.SetActive("konto2"); err != nil {
+		t.Fatal(err)
+	}
+	if got := r.post(t, "opus-5"); got != "konto2" {
+		t.Fatalf("served by %q, want konto2", got)
+	}
+	if r.rec.last.Alias != "abo:opus-5" {
+		t.Errorf("Alias = %q, want abo:opus-5: usage by alias must not split with the switch", r.rec.last.Alias)
+	}
 }

@@ -43,14 +43,15 @@ const (
 )
 
 type snapshotMsg struct {
-	rng      int
-	stats    *store.Stats
-	limits   map[string]proxy.ProviderLimitView
-	blocked  map[string]string
-	records  []store.Record
-	active   string
-	accounts []string
-	err      error
+	rng       int
+	stats     *store.Stats
+	limits    map[string]proxy.ProviderLimitView
+	blocked   map[string]string
+	records   []store.Record
+	active    string
+	accounts  []string
+	activeSeq int
+	err       error
 }
 
 type tickMsg struct{}
@@ -75,8 +76,9 @@ type model struct {
 	lastID  int64
 	err     error
 
-	active   string
-	accounts []string
+	active    string
+	accounts  []string
+	activeSeq int
 }
 
 func newModel(src Source, logs *LogBuffer, listen string, now func() time.Time) model {
@@ -87,7 +89,7 @@ func (m model) Init() tea.Cmd { return m.fetch() }
 
 // fetch runs as a tea.Cmd, off the UI goroutine; the next tick is scheduled only after it returns, so slow queries never pile up.
 func (m model) fetch() tea.Cmd {
-	src, rng, after, now := m.src, m.rng, m.lastID, m.now()
+	src, rng, after, now, seq := m.src, m.rng, m.lastID, m.now(), m.activeSeq
 	return func() tea.Msg {
 		r := ranges[rng]
 		st, err := src.Stats(now.Add(-r.span), r.step, now)
@@ -100,7 +102,7 @@ func (m model) fetch() tea.Cmd {
 		}
 		active, accounts := src.Active()
 		return snapshotMsg{rng: rng, stats: st, limits: src.Limits(), blocked: src.Blocked(), records: recs,
-			active: active, accounts: accounts}
+			active: active, accounts: accounts, activeSeq: seq}
 	}
 }
 
@@ -130,7 +132,10 @@ func (m *model) apply(msg snapshotMsg) {
 		m.stats = msg.stats
 	}
 	m.limits, m.blocked = msg.limits, msg.blocked
-	m.active, m.accounts = msg.active, msg.accounts
+	// A snapshot fetched before a switch would flick the old account back for a tick.
+	if msg.activeSeq == m.activeSeq {
+		m.active, m.accounts = msg.active, msg.accounts
+	}
 	var fresh []store.Record
 	for _, r := range msg.records {
 		if r.ID > m.lastID {
@@ -177,6 +182,7 @@ func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.err = err
 		} else {
 			m.active = next
+			m.activeSeq++
 		}
 	case key.Matches(k, m.keys.Range):
 		if k.String() == "left" {

@@ -299,3 +299,12 @@ func TestKeyAOnlyOnOverview(t *testing.T) {
 		t.Errorf("SetActive called on logs tab: %v", *set)
 	}
 }
+
+func TestStaleSnapshotKeepsNewActive(t *testing.T) {
+	m, _ := accountModel("abo", "konto2")
+	m, _ = send(m, runes("a"))
+	m, _ = send(m, snapshotMsg{stats: &store.Stats{}, active: "abo", accounts: []string{"abo", "konto2"}})
+	if m.active != "konto2" {
+		t.Errorf("active = %q, want konto2: a snapshot fetched before the switch must not undo it", m.active)
+	}
+}

@@ -31,6 +31,7 @@ const range = ref<RangeKey>(storedRange())
 const stats = ref<Stats | null>(null)
 const limits = ref<Record<string, ProviderLimit>>({})
 const active = ref<Active>({ active: '', accounts: [] })
+const activeError = ref('')
 const rows = ref<RequestRow[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -84,14 +85,17 @@ async function refresh() {
 usePoll(refresh, 2000)
 usePoll(async () => {
   limits.value = await getJSON<Record<string, ProviderLimit>>('/api/limits')
+}, 10_000)
+usePoll(async () => {
   active.value = await getJSON<Active>('/api/active')
 }, 10_000)
 
 async function activate(name: string) {
   try {
     active.value = await putJSON<Active>('/api/active', { provider: name })
+    activeError.value = ''
   } catch (e) {
-    error.value = String(e)
+    activeError.value = (e as Error).message
   }
 }
 
@@ -180,6 +184,7 @@ const chart = computed(() => {
             <span v-if="p.name === active.active" class="badge-active">● {{ t('active.badge') }}</span>
             <button v-else @click="activate(p.name)">{{ t('active.activate') }}</button>
           </template>
+          <span v-if="activeError && active.accounts.includes(p.name)" class="note bad">{{ activeError }}</span>
           <span v-if="p.unlimited" class="note" :title="t('limits.unlimited')">∞ {{ t('limits.unlimited') }}</span>
           <span v-else-if="p.windows.length === 0" class="note">– {{ t('limits.noData') }}</span>
         </div>
