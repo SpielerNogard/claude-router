@@ -1,3 +1,9 @@
+## v0.4.0 (2026-11-23)
+
+### Feat
+
+- switch the active account from TUI and web UI (#3)
+
 ## v0.3.0 (2026-11-13)
 
 ### Feat
