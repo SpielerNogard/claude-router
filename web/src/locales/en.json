@@ -104,5 +104,9 @@
     "cost": "Cost",
     "year": "Last 12 months",
     "weekHour": "Weekday × hour (last 8 weeks)"
+  },
+  "active": {
+    "badge": "active",
+    "activate": "Activate"
   }
 }
