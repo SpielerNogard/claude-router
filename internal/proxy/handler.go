@@ -41,6 +41,12 @@ type Proxy struct {
 	limits *limits
 	debug  bool
 	logWG  sync.WaitGroup
+
+	activeMu    sync.Mutex
+	active      string
+	derivedFrom *config.Config
+	derivedFor  string
+	derived     *config.Config
 }
 
 func (px *Proxy) SetDebug(on bool) { px.debug = on }
@@ -129,7 +135,7 @@ func (px *Proxy) Messages(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid_request_error", "request body is not valid JSON: "+err.Error())
 		return
 	}
-	tgt, rerr := Resolve(px.cfg(), a.Model)
+	tgt, rerr := Resolve(px.config(), a.Model)
 	if rerr != nil {
 		if px.debug {
 			logResolution(a.Model, tgt, rerr, a.Stream)
@@ -213,7 +219,7 @@ func (px *Proxy) applyCooldown(tgt *Target) *Target {
 	for tgt.Provider.Fallback != "" && !seen[tgt.Provider.Name] &&
 		px.cool.Blocked(tgt.Provider.Name, time.Now()) {
 		seen[tgt.Provider.Name] = true
-		fb, rerr := fallbackTarget(px.cfg(), tgt)
+		fb, rerr := fallbackTarget(px.config(), tgt)
 		if rerr != nil {
 			log.Printf("fallback %s: %s, request stays with %s",
 				tgt.Provider.Fallback, rerr.Message, tgt.Provider.Name)
