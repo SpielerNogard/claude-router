@@ -147,3 +147,19 @@ func TestOverviewFitsHeight(t *testing.T) {
 		t.Errorf("150x50 should show cards within height:\n%s", v)
 	}
 }
+
+func TestProviderCardShowsActive(t *testing.T) {
+	msg := busySnapshot()
+	msg.active, msg.accounts = "konto2", []string{"abo", "konto2"}
+	v := overviewAt(140, msg)
+	if !strings.Contains(v, "konto2 ● active") {
+		t.Errorf("konto2 not marked active:\n%s", v)
+	}
+	if strings.Contains(v, "abo ● active") {
+		t.Errorf("abo marked active:\n%s", v)
+	}
+	msg.accounts = []string{"konto2"}
+	if strings.Contains(overviewAt(140, msg), "● active") {
+		t.Error("a single account must not be marked")
+	}
+}

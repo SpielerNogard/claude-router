@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"slices"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -19,6 +20,8 @@ type Source interface {
 	Recent(f store.RequestFilter) ([]store.Record, int, error)
 	Limits() map[string]proxy.ProviderLimitView
 	Blocked() map[string]string
+	Active() (string, []string)
+	SetActive(string) error
 }
 
 // Same ranges and steps as web/src/lib/live.ts.
@@ -40,12 +43,14 @@ const (
 )
 
 type snapshotMsg struct {
-	rng     int
-	stats   *store.Stats
-	limits  map[string]proxy.ProviderLimitView
-	blocked map[string]string
-	records []store.Record
-	err     error
+	rng      int
+	stats    *store.Stats
+	limits   map[string]proxy.ProviderLimitView
+	blocked  map[string]string
+	records  []store.Record
+	active   string
+	accounts []string
+	err      error
 }
 
 type tickMsg struct{}
@@ -69,6 +74,9 @@ type model struct {
 	records []store.Record
 	lastID  int64
 	err     error
+
+	active   string
+	accounts []string
 }
 
 func newModel(src Source, logs *LogBuffer, listen string, now func() time.Time) model {
@@ -90,7 +98,9 @@ func (m model) fetch() tea.Cmd {
 		if err != nil {
 			return snapshotMsg{rng: rng, err: err}
 		}
-		return snapshotMsg{rng: rng, stats: st, limits: src.Limits(), blocked: src.Blocked(), records: recs}
+		active, accounts := src.Active()
+		return snapshotMsg{rng: rng, stats: st, limits: src.Limits(), blocked: src.Blocked(), records: recs,
+			active: active, accounts: accounts}
 	}
 }
 
@@ -120,6 +130,7 @@ func (m *model) apply(msg snapshotMsg) {
 		m.stats = msg.stats
 	}
 	m.limits, m.blocked = msg.limits, msg.blocked
+	m.active, m.accounts = msg.active, msg.accounts
 	var fresh []store.Record
 	for _, r := range msg.records {
 		if r.ID > m.lastID {
@@ -160,6 +171,13 @@ func (m model) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.tab = (m.tab + 1) % 2
 	case key.Matches(k, m.keys.Jump):
 		m.tab = map[string]int{"1": tabOverview, "2": tabLogs}[k.String()]
+	case key.Matches(k, m.keys.Active) && m.tab == tabOverview && len(m.accounts) > 1:
+		next := m.accounts[(slices.Index(m.accounts, m.active)+1)%len(m.accounts)]
+		if err := m.src.SetActive(next); err != nil {
+			m.err = err
+		} else {
+			m.active = next
+		}
 	case key.Matches(k, m.keys.Range):
 		if k.String() == "left" {
 			m.rng = max(m.rng-1, 0)

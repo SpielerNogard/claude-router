@@ -13,7 +13,11 @@ import (
 	"github.com/SpielerNogard/claude-router/internal/store"
 )
 
-type fakeSource struct{}
+type fakeSource struct {
+	active   string
+	accounts []string
+	set      *[]string
+}
 
 func (fakeSource) Stats(time.Time, time.Duration, time.Time) (*store.Stats, error) {
 	return &store.Stats{}, nil
@@ -21,6 +25,13 @@ func (fakeSource) Stats(time.Time, time.Duration, time.Time) (*store.Stats, erro
 func (fakeSource) Recent(store.RequestFilter) ([]store.Record, int, error) { return nil, 0, nil }
 func (fakeSource) Limits() map[string]proxy.ProviderLimitView              { return nil }
 func (fakeSource) Blocked() map[string]string                              { return nil }
+func (f fakeSource) Active() (string, []string)                            { return f.active, f.accounts }
+func (f fakeSource) SetActive(name string) error {
+	if f.set != nil {
+		*f.set = append(*f.set, name)
+	}
+	return nil
+}
 
 var testNow = time.Date(2026, 11, 13, 12, 0, 0, 0, time.UTC)
 
@@ -245,5 +256,46 @@ func TestHelpToggle(t *testing.T) {
 	m, _ = send(m, runes("?"))
 	if strings.Contains(m.View(), "ctrl+c") {
 		t.Fatal("? did not close full help")
+	}
+}
+
+func accountModel(accounts ...string) (model, *[]string) {
+	set := &[]string{}
+	src := fakeSource{accounts: accounts, set: set}
+	if len(accounts) > 0 {
+		src.active = accounts[0]
+	}
+	m := newModel(src, NewLogBuffer(10), "127.0.0.1:4141", func() time.Time { return testNow })
+	m, _ = send(m, snapshotMsg{stats: &store.Stats{}, active: src.active, accounts: accounts})
+	return m, set
+}
+
+func TestKeyACyclesAccounts(t *testing.T) {
+	m, set := accountModel("abo", "konto2")
+	m, _ = send(m, runes("a"))
+	if m.active != "konto2" {
+		t.Errorf("active = %q, want konto2", m.active)
+	}
+	m, _ = send(m, runes("a"))
+	if m.active != "abo" || strings.Join(*set, ",") != "konto2,abo" {
+		t.Errorf("active = %q, SetActive calls = %v", m.active, *set)
+	}
+}
+
+func TestKeyANoAccounts(t *testing.T) {
+	for _, accounts := range [][]string{nil, {"abo"}} {
+		m, set := accountModel(accounts...)
+		send(m, runes("a"))
+		if len(*set) != 0 {
+			t.Errorf("accounts %v: SetActive called with %v", accounts, *set)
+		}
+	}
+}
+
+func TestKeyAOnlyOnOverview(t *testing.T) {
+	m, set := accountModel("abo", "konto2")
+	send(m, runes("2"), runes("a"))
+	if len(*set) != 0 {
+		t.Errorf("SetActive called on logs tab: %v", *set)
 	}
 }
