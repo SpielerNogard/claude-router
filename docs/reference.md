@@ -95,5 +95,6 @@ On startup the router checks for updates itself, see [Configuration](configurati
 | `GET /api/messages`, `GET /api/messages/{id}` | Message log |
 | `GET /api/messages/by-request/{request_id}` | All logged documents of one request |
 | `GET /api/config`, `PUT /api/config` | Read and write the configuration |
+| `GET /api/active`, `PUT /api/active` | Read and switch the account serving unprefixed models (`{"provider":"konto2"}`); runtime only |
 | `POST /api/models/refresh` | Re-run model discovery |
 | `GET /ui/` | Web UI |
