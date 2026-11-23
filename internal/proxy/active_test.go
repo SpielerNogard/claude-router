@@ -100,6 +100,10 @@ func TestActiveClearedWhenConfigDropsIt(t *testing.T) {
 	if px.config() != next {
 		t.Error("an account no longer in the chain must not reorder anything")
 	}
+	cur.Store(accountsCfg())
+	if active, _ := px.Active(); active != "abo" {
+		t.Errorf("Active after restoring the config = %q, want abo: a dropped account must stay cleared", active)
+	}
 }
 
 // accountRig serves abo, konto2 and deepseek from test servers whose behaviour each test sets.

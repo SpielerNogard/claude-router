@@ -163,3 +163,12 @@ func TestProviderCardShowsActive(t *testing.T) {
 		t.Error("a single account must not be marked")
 	}
 }
+
+func TestCompactTableShowsActive(t *testing.T) {
+	msg := busySnapshot()
+	msg.active, msg.accounts = "konto2", []string{"abo", "konto2"}
+	m, _ := send(newTestModel(), tea.WindowSizeMsg{Width: 80, Height: 24}, msg)
+	if v := m.View(); !strings.Contains(v, "konto2 ●") {
+		t.Errorf("active account not marked in compact table:\n%s", v)
+	}
+}

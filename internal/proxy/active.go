@@ -31,6 +31,7 @@ func (px *Proxy) Active() (string, []string) {
 	if slices.Contains(accounts, px.active) {
 		return px.active, accounts
 	}
+	px.active = ""
 	if len(accounts) == 0 {
 		return "", nil
 	}
@@ -55,6 +56,10 @@ func (px *Proxy) config() *config.Config {
 	defer px.activeMu.Unlock()
 	accounts := Accounts(cfg)
 	i := slices.Index(accounts, px.active)
+	if i < 0 {
+		// Cleared, so a later config that re-adds the account does not silently reactivate it.
+		px.active = ""
+	}
 	if i <= 0 {
 		return cfg
 	}
